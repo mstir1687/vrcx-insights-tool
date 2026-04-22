@@ -16,6 +16,10 @@ import { buildSelectableUserOptions } from './selectableUsers.js';
 const { createApp, reactive, computed, onMounted } = window.Vue;
 const { ElMessage } = window.ElementPlus;
 const insightsApi = window.vrcxInsights;
+const repositoryUrl = 'https://github.com/meng-luo/vrcx-insights-tool';
+const versionFileUrl = new URL('../../Version', import.meta.url);
+const devtoolsUnlockClickCount = 5;
+const devtoolsClickResetMs = 1500;
 
 function formatDuration(ms) {
   if (!ms || ms <= 0) return '0m';
@@ -427,37 +431,77 @@ createApp({
           </el-tab-pane>
 
           <el-tab-pane label="设置" name="settings">
-            <el-card class="panel-card settings-card" shadow="hover">
-              <div class="section-title-row">
-                <h2>数据设置</h2>
-              </div>
+            <div class="settings-panels">
+              <el-card class="panel-card settings-card" shadow="hover">
+                <div class="section-title-row">
+                  <h2>数据设置</h2>
+                </div>
 
-              <div class="settings-stack">
-                <div class="settings-item">
-                  <span class="settings-label">当前状态</span>
-                  <span class="settings-value">{{ canAnalyze ? '已就绪' : '待选择数据文件夹' }}</span>
+                <div class="settings-stack">
+                  <div class="settings-item">
+                    <span class="settings-label">当前状态</span>
+                    <span class="settings-value">{{ canAnalyze ? '已就绪' : '待选择数据文件夹' }}</span>
+                  </div>
+                  <div class="settings-item">
+                    <span class="settings-label">VRCX数据文件夹</span>
+                    <span class="settings-value">{{ state.appState.dataDir || '未设置' }}</span>
+                  </div>
+                  <div class="settings-item">
+                    <span class="settings-label">数据库文件</span>
+                    <span class="settings-value">{{ state.appState.dbPath || '未设置' }}</span>
+                  </div>
+                  <div class="settings-item">
+                    <span class="settings-label">配置文件</span>
+                    <span class="settings-value">{{ state.appState.configPath || '-' }}</span>
+                  </div>
                 </div>
-                <div class="settings-item">
-                  <span class="settings-label">VRCX数据文件夹</span>
-                  <span class="settings-value">{{ state.appState.dataDir || '未设置' }}</span>
-                </div>
-                <div class="settings-item">
-                  <span class="settings-label">数据库文件</span>
-                  <span class="settings-value">{{ state.appState.dbPath || '未设置' }}</span>
-                </div>
-                <div class="settings-item">
-                  <span class="settings-label">配置文件</span>
-                  <span class="settings-value">{{ state.appState.configPath || '-' }}</span>
-                </div>
-              </div>
 
-              <div class="settings-actions">
-                <el-button type="primary" :loading="state.selectingDataDir" @click="chooseDataDirectory">
-                  选择VRCX数据文件夹
-                </el-button>
-                <el-button :disabled="!canAnalyze" @click="handleReload">重新读取当前数据库</el-button>
-              </div>
-            </el-card>
+                <div class="settings-actions">
+                  <el-button type="primary" :loading="state.selectingDataDir" @click="chooseDataDirectory">
+                    选择VRCX数据文件夹
+                  </el-button>
+                  <el-button :disabled="!canAnalyze" @click="handleReload">重新读取当前数据库</el-button>
+                </div>
+              </el-card>
+
+              <el-card class="panel-card settings-card" shadow="hover">
+                <div class="section-title-row">
+                  <h2 @click="handleAboutTitleClick">关于项目</h2>
+                </div>
+
+                <div class="settings-stack">
+                  <div class="settings-item">
+                    <span class="settings-label">项目名称</span>
+                    <span class="settings-value">VRCX Insights Tool</span>
+                  </div>
+                  <div class="settings-item">
+                    <span class="settings-label">简介</span>
+                    <span class="settings-value">一个面向 VRCX.sqlite3 的本地桌面分析工具，用来查看关系、活动轨迹和双人共处情况。</span>
+                  </div>
+                  <div class="settings-item">
+                    <span class="settings-label">版本号</span>
+                    <span class="settings-value">{{ state.versionText || '-' }}</span>
+                  </div>
+                  <div class="settings-item">
+                    <span class="settings-label">贡献者</span>
+                    <span class="settings-value">梦璃雨落</span>
+                  </div>
+                  <div class="settings-item">
+                    <span class="settings-label">仓库地址</span>
+                    <el-link
+                      class="settings-link"
+                      href="https://github.com/meng-luo/vrcx-insights-tool"
+                      target="_blank"
+                      rel="noreferrer"
+                      type="primary"
+                      @click.prevent="openRepositoryLink"
+                    >
+                      https://github.com/meng-luo/vrcx-insights-tool
+                    </el-link>
+                  </div>
+                </div>
+              </el-card>
+            </div>
           </el-tab-pane>
         </el-tabs>
 
@@ -493,8 +537,10 @@ createApp({
         configPath: '',
         requiresOnboarding: true
       },
+      versionText: '',
       bootstrapping: true,
       selectingDataDir: false,
+      devtoolsClickCount: 0,
       onboardingVisible: false,
       meta: null,
       selectedTab: 'acquaintances',
@@ -554,6 +600,7 @@ createApp({
       { label: '有史以来', value: 'all' }
     ];
     const pageSizeOptions = [10, 20, 50, 100];
+    let devtoolsClickTimer = null;
 
     const userOptions = computed(() => {
       return buildSelectableUserOptions(state.meta, state.jumpedUsers);
@@ -933,6 +980,39 @@ createApp({
       state.selectedTab = 'settings';
     }
 
+    function resetDevtoolsClickProgress() {
+      state.devtoolsClickCount = 0;
+      if (devtoolsClickTimer) {
+        window.clearTimeout(devtoolsClickTimer);
+        devtoolsClickTimer = null;
+      }
+    }
+
+    function scheduleDevtoolsClickReset() {
+      if (devtoolsClickTimer) {
+        window.clearTimeout(devtoolsClickTimer);
+      }
+      devtoolsClickTimer = window.setTimeout(() => {
+        state.devtoolsClickCount = 0;
+        devtoolsClickTimer = null;
+      }, devtoolsClickResetMs);
+    }
+
+    async function handleAboutTitleClick() {
+      state.devtoolsClickCount += 1;
+      if (state.devtoolsClickCount < devtoolsUnlockClickCount) {
+        scheduleDevtoolsClickReset();
+        return;
+      }
+      resetDevtoolsClickProgress();
+      try {
+        await getInsightsApi().openDevTools();
+        ElMessage.success('已打开界面调试工具');
+      } catch (error) {
+        ElMessage.error(`打开界面调试工具失败: ${error.message}`);
+      }
+    }
+
     async function chooseDataDirectory() {
       state.selectingDataDir = true;
       try {
@@ -954,9 +1034,27 @@ createApp({
       }
     }
 
+    async function loadVersionText() {
+      try {
+        const response = await fetch(versionFileUrl);
+        state.versionText = (await response.text()).trim();
+      } catch (_error) {
+        state.versionText = '';
+      }
+    }
+
+    async function openRepositoryLink() {
+      try {
+        await getInsightsApi().openExternalUrl(repositoryUrl);
+      } catch (error) {
+        ElMessage.error(`打开仓库链接失败: ${error.message}`);
+      }
+    }
+
     onMounted(async () => {
       state.bootstrapping = true;
       try {
+        await loadVersionText();
         await hydrateConfiguredState();
       } catch (error) {
         ElMessage.error(`加载失败: ${error.message}`);
@@ -995,12 +1093,14 @@ createApp({
       loadRelationshipTop,
       loadRelationshipPair,
       applyAllViews,
-      handleReload,
-      openSettings,
-      chooseDataDirectory,
-      goTimeline,
-      goRelationship
-    };
+       handleReload,
+       openSettings,
+       handleAboutTitleClick,
+       chooseDataDirectory,
+       openRepositoryLink,
+       goTimeline,
+       goRelationship
+     };
   }
 }).use(window.ElementPlus, {
   locale: window.ElementPlusLocaleZhCn

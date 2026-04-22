@@ -23,6 +23,18 @@ describe('SqliteReadRepository', () => {
     repo.close();
   });
 
+  test('uses the self display name from local logs when self is missing from the friend table', () => {
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vrcx-read-repo-'));
+    const dbPath = path.join(tempDir, 'fixture.sqlite3');
+    createFixtureDb(dbPath);
+
+    const repo = new SqliteReadRepository(dbPath);
+    const meta = repo.getMeta();
+
+    expect(meta.selfDisplayName).toBe('Self');
+    repo.close();
+  });
+
   test('returns only bounded raw session inputs for the requested user and date range', () => {
     const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vrcx-read-repo-'));
     const dbPath = path.join(tempDir, 'fixture.sqlite3');

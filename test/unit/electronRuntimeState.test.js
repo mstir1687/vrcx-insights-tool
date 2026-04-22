@@ -138,4 +138,58 @@ describe('electron runtime state', () => {
     expect(service.refreshMeta).toHaveBeenCalledTimes(1);
     expect(meta).toEqual({ dbPath, selfUserId: 'usr_self' });
   });
+
+  test('opens external urls with the injected shell bridge', async () => {
+    const openExternal = vi.fn(async () => undefined);
+    const runtime = new ElectronAppRuntime({
+      userDataPath: '/tmp/vrcx-user',
+      appDataPath: '/tmp/app-data',
+      platform: 'darwin',
+      fsImpl: {
+        existsSync: vi.fn(() => false),
+        mkdirSync: vi.fn(),
+        writeFileSync: vi.fn(),
+        readFileSync: vi.fn(() => {
+          throw new Error('missing');
+        })
+      },
+      shellImpl: {
+        openExternal
+      },
+      serviceFactory: vi.fn()
+    });
+
+    await runtime.openExternalUrl('https://github.com/meng-luo/vrcx-insights-tool');
+
+    expect(openExternal).toHaveBeenCalledTimes(1);
+    expect(openExternal).toHaveBeenCalledWith('https://github.com/meng-luo/vrcx-insights-tool');
+  });
+
+  test('opens renderer devtools on the current browser window', async () => {
+    const openDevTools = vi.fn();
+    const runtime = new ElectronAppRuntime({
+      userDataPath: '/tmp/vrcx-user',
+      appDataPath: '/tmp/app-data',
+      platform: 'darwin',
+      fsImpl: {
+        existsSync: vi.fn(() => false),
+        mkdirSync: vi.fn(),
+        writeFileSync: vi.fn(),
+        readFileSync: vi.fn(() => {
+          throw new Error('missing');
+        })
+      },
+      serviceFactory: vi.fn()
+    });
+
+    const result = await runtime.openDevTools({
+      webContents: {
+        openDevTools
+      }
+    });
+
+    expect(openDevTools).toHaveBeenCalledTimes(1);
+    expect(openDevTools).toHaveBeenCalledWith({ mode: 'detach' });
+    expect(result).toEqual({ ok: true });
+  });
 });

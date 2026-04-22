@@ -339,10 +339,24 @@ body {
   color: var(--page-muted);
 }
 
+.settings-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .settings-card > .el-card__body {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
+}
+
+.settings-card .section-title-row {
+  margin-bottom: 6px;
+}
+
+.settings-card .section-title-row h2 {
+  margin: 0;
 }
 
 .settings-stack,
@@ -366,6 +380,14 @@ body {
 
 .settings-value {
   color: var(--page-text);
+  word-break: break-all;
+}
+
+.settings-link {
+  align-self: flex-start;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
   word-break: break-all;
 }
 

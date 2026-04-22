@@ -23,5 +23,9 @@ describe('electron preload runtime', () => {
     expect(preloadSource).toContain(
       'updateDataDirectory: (dataDir) => ipcRenderer.invoke(\'app:update-data-directory\', { dataDir })'
     );
+    expect(preloadSource).toContain(
+      'openExternalUrl: (url) => ipcRenderer.invoke(\'app:open-external-url\', { url })'
+    );
+    expect(preloadSource).toContain('openDevTools: () => ipcRenderer.invoke(\'app:open-devtools\')');
   });
 });

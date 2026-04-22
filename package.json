@@ -30,7 +30,8 @@
     },
     "files": [
       "src/**/*",
-      "package.json"
+      "package.json",
+      "Version"
     ],
     "extraMetadata": {
       "main": "src/electron/main.js"

@@ -31,6 +31,8 @@ describe('registerInsightsIpc', () => {
       'app:get-state',
       'app:choose-data-directory',
       'app:update-data-directory',
+      'app:open-external-url',
+      'app:open-devtools',
       'insights:get-meta',
       'insights:reload',
       'insights:get-acquaintances',

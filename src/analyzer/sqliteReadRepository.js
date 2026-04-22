@@ -41,6 +41,41 @@ function runAll(db, sql, params = []) {
   return db.prepare(sql).all(...params);
 }
 
+function queryLatestDisplayName(db, tableName, userId) {
+  if (!tableName || !userId) {
+    return '';
+  }
+  return (
+    db
+      .prepare(
+        `
+        SELECT display_name AS displayName
+        FROM ${tableName}
+        WHERE user_id = ?
+          AND display_name IS NOT NULL
+          AND TRIM(display_name) != ''
+        ORDER BY created_at DESC
+        LIMIT 1
+        `
+      )
+      .get(userId)?.displayName || ''
+  );
+}
+
+function resolveSelfDisplayName(db, { selfUserId, friendList, feedGpsTable, feedOnlineOfflineTable }) {
+  const friendName = friendList.find((row) => row.userId === selfUserId)?.displayName || '';
+  if (friendName) {
+    return friendName;
+  }
+
+  return (
+    queryLatestDisplayName(db, 'gamelog_join_leave', selfUserId) ||
+    queryLatestDisplayName(db, feedGpsTable, selfUserId) ||
+    queryLatestDisplayName(db, feedOnlineOfflineTable, selfUserId) ||
+    selfUserId
+  );
+}
+
 export class SqliteReadRepository {
   constructor(dbPath) {
     this.dbPath = dbPath;
@@ -91,7 +126,12 @@ export class SqliteReadRepository {
       .sort((a, b) => a.displayName.localeCompare(b.displayName));
 
     const friendSet = new Set(friendList.map((row) => row.userId).filter(Boolean));
-    const selfDisplayName = friendList.find((row) => row.userId === selfUserId)?.displayName || selfUserId;
+    const selfDisplayName = resolveSelfDisplayName(this.db, {
+      selfUserId,
+      friendList,
+      feedGpsTable,
+      feedOnlineOfflineTable
+    });
 
     this.meta = {
       dbPath: this.dbPath,

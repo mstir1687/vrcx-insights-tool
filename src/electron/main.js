@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { app, BrowserWindow, dialog, ipcMain } from 'electron';
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 
 import { registerInsightsIpc } from './ipcHandlers.js';
 import { ElectronAppRuntime } from './runtimeState.js';
@@ -36,7 +36,8 @@ app.whenReady().then(() => {
     appDataPath: app.getPath('appData'),
     platform: process.platform,
     env: process.env,
-    dialogImpl: dialog
+    dialogImpl: dialog,
+    shellImpl: shell
   });
   runtime.init();
   registerInsightsIpc({ ipcMain, runtime });

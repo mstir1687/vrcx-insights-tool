@@ -72,6 +72,7 @@ export class ElectronAppRuntime {
     env = process.env,
     fsImpl = fs,
     dialogImpl = null,
+    shellImpl = null,
     serviceFactory = (dbPath) => new InsightsService(dbPath)
   }) {
     this.userDataPath = userDataPath;
@@ -80,6 +81,7 @@ export class ElectronAppRuntime {
     this.env = env;
     this.fs = fsImpl;
     this.dialog = dialogImpl;
+    this.shell = shellImpl;
     this.serviceFactory = serviceFactory;
     this.configPath = getConfigFilePath(userDataPath);
     this.service = null;
@@ -212,5 +214,26 @@ export class ElectronAppRuntime {
       ...this.updateDataDirectory(result.filePaths[0]),
       canceled: false
     };
+  }
+
+  async openExternalUrl(url) {
+    const normalized = typeof url === 'string' ? url.trim() : '';
+    if (!normalized) {
+      throw new Error('外链地址不能为空');
+    }
+    if (!this.shell || typeof this.shell.openExternal !== 'function') {
+      throw new Error('系统浏览器不可用');
+    }
+    await this.shell.openExternal(normalized);
+    return { ok: true, url: normalized };
+  }
+
+  async openDevTools(browserWindow) {
+    const webContents = browserWindow?.webContents;
+    if (!webContents || typeof webContents.openDevTools !== 'function') {
+      throw new Error('当前窗口不可用');
+    }
+    webContents.openDevTools({ mode: 'detach' });
+    return { ok: true };
   }
 }

@@ -27,7 +27,7 @@ describe('windows packaging config', () => {
       output: 'dist',
       buildResources: 'build'
     });
-    expect(packageJson.build?.files).toEqual(['src/**/*', 'package.json']);
+    expect(packageJson.build?.files).toEqual(['src/**/*', 'package.json', 'Version']);
     expect(packageJson.build?.extraMetadata).toEqual({ main: 'src/electron/main.js' });
     expect(packageJson.build?.asar).toBe(true);
     expect(packageJson.build?.toolsets).toMatchObject({
