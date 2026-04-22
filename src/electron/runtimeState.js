@@ -16,7 +16,7 @@ export function getVrcxSqlitePath(dataDir) {
 }
 
 export function getWindowsDefaultDataDir({ env = process.env, appDataPath = '' } = {}) {
-  const roamingRoot = env.APPDATA || appDataPath;
+  const roamingRoot = appDataPath || env.APPDATA;
   if (!roamingRoot) {
     return '';
   }

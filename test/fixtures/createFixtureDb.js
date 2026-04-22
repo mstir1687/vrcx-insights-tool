@@ -1,8 +1,16 @@
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 
-function runSql(dbPath, sql) {
-  execFileSync('sqlite3', [dbPath, sql], { stdio: 'pipe' });
+const require = createRequire(import.meta.url);
+const { DatabaseSync } = require('node:sqlite');
+
+export function runSql(dbPath, sql) {
+  const db = new DatabaseSync(dbPath);
+  try {
+    db.exec(sql);
+  } finally {
+    db.close();
+  }
 }
 
 export function createFixtureDb(dbPath) {

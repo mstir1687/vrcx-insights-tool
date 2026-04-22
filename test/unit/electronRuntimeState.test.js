@@ -50,6 +50,18 @@ describe('electron runtime state', () => {
     expect(service.reload).toHaveBeenCalledTimes(1);
   });
 
+  test('prefers the injected Windows appDataPath over ambient APPDATA', () => {
+    const appDataPath = path.join('C:', 'Users', 'tester', 'AppData', 'Roaming');
+    const envAppDataPath = path.join('C:', 'Users', 'runneradmin', 'AppData', 'Roaming');
+
+    expect(
+      getWindowsDefaultDataDir({
+        env: { APPDATA: envAppDataPath },
+        appDataPath
+      })
+    ).toBe(path.join(appDataPath, 'VRCX'));
+  });
+
   test('requires onboarding on non-Windows when no saved data directory is available', () => {
     const runtime = new ElectronAppRuntime({
       userDataPath: '/tmp/vrcx-user',

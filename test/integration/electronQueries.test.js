@@ -1,7 +1,6 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
 
 import { describe, expect, test } from 'vitest';
 
@@ -13,7 +12,7 @@ import {
   runRelationshipTopQuery,
   runTimelineQuery
 } from '../../src/queries/insightsQueries.js';
-import { createFixtureDb } from '../fixtures/createFixtureDb.js';
+import { createFixtureDb, runSql } from '../fixtures/createFixtureDb.js';
 
 function createService(dbPath) {
   const service = new InsightsService(dbPath);
@@ -67,7 +66,7 @@ describe('electron query integration', () => {
     const dbPath = path.join(tempDir, 'fixture-invite.sqlite3');
     createFixtureDb(dbPath);
 
-    execFileSync('sqlite3', [
+    runSql(
       dbPath,
       `
       INSERT INTO gamelog_location (created_at, location, world_id, world_name, time, group_name) VALUES
@@ -80,7 +79,7 @@ describe('electron query integration', () => {
         ('2026-04-16T12:30:00.000Z', 'OnPlayerLeft', 'Self', 'wrld_invite_plus:102~private(usr_host)~canRequestInvite~region(us)', 'usr_self', 1800000),
         ('2026-04-16T12:30:00.000Z', 'OnPlayerLeft', 'Friend A', 'wrld_invite_plus:102~private(usr_host)~canRequestInvite~region(us)', 'usr_friend_a', 900000);
       `
-    ]);
+    );
 
     const service = createService(dbPath);
 
@@ -139,7 +138,7 @@ describe('electron query integration', () => {
     const dbPath = path.join(tempDir, 'fixture-current-display-name.sqlite3');
     createFixtureDb(dbPath);
 
-    execFileSync('sqlite3', [
+    runSql(
       dbPath,
       `
       UPDATE usrself_friend_log_current
@@ -150,7 +149,7 @@ describe('electron query integration', () => {
       SET display_name = 'レミだんご'
       WHERE user_id = 'usr_friend_a';
       `
-    ]);
+    );
 
     const service = createService(dbPath);
 
@@ -182,7 +181,7 @@ describe('electron query integration', () => {
     const dbPath = path.join(tempDir, 'fixture-worldid-fallback.sqlite3');
     createFixtureDb(dbPath);
 
-    execFileSync('sqlite3', [
+    runSql(
       dbPath,
       `
       INSERT INTO gamelog_location (created_at, location, world_id, world_name, time, group_name) VALUES
@@ -191,7 +190,7 @@ describe('electron query integration', () => {
       INSERT INTO gamelog_join_leave (created_at, type, display_name, location, user_id, time) VALUES
         ('2026-04-18T09:00:00.000Z', 'OnPlayerLeft', 'Target User', 'wrld_hidden:74618~hidden(usr_701a11fa-ac73-46fb-aaed-9d1f5e6fa3ef)~region(us)', 'usr_target_hidden', 1800000);
       `
-    ]);
+    );
 
     const service = createService(dbPath);
 
@@ -215,14 +214,14 @@ describe('electron query integration', () => {
     const dbPath = path.join(tempDir, 'fixture-unknown-world.sqlite3');
     createFixtureDb(dbPath);
 
-    execFileSync('sqlite3', [
+    runSql(
       dbPath,
       `
       INSERT INTO gamelog_join_leave (created_at, type, display_name, location, user_id, time) VALUES
         ('2026-04-19T09:00:00.000Z', 'OnPlayerLeft', 'Self', 'wrld_api_only:60241~hidden(usr_host)~region(jp)', 'usr_self', 1800000),
         ('2026-04-19T09:00:00.000Z', 'OnPlayerLeft', 'Friend A', 'wrld_api_only:60241~hidden(usr_host)~region(jp)', 'usr_friend_a', 1200000);
       `
-    ]);
+    );
 
     const service = createService(dbPath);
 
@@ -253,7 +252,7 @@ describe('electron query integration', () => {
     const dbPath = path.join(tempDir, 'fixture-large.sqlite3');
     createFixtureDb(dbPath);
 
-    execFileSync('sqlite3', [
+    runSql(
       dbPath,
       `
       WITH RECURSIVE seq(x) AS (
@@ -271,7 +270,7 @@ describe('electron query integration', () => {
         600000
       FROM seq;
       `
-    ]);
+    );
 
     const service = createService(dbPath);
 
@@ -296,7 +295,7 @@ describe('electron query integration', () => {
     const dbPath = path.join(tempDir, 'fixture-paginated.sqlite3');
     createFixtureDb(dbPath);
 
-    execFileSync('sqlite3', [
+    runSql(
       dbPath,
       `
       WITH RECURSIVE seq(x) AS (
@@ -314,7 +313,7 @@ describe('electron query integration', () => {
         600000
       FROM seq;
       `
-    ]);
+    );
 
     const service = createService(dbPath);
 
@@ -368,7 +367,7 @@ describe('electron query integration', () => {
     const dbPath = path.join(tempDir, 'fixture-timeline-scope.sqlite3');
     createFixtureDb(dbPath);
 
-    execFileSync('sqlite3', [
+    runSql(
       dbPath,
       `
       WITH RECURSIVE sessions(x) AS (
@@ -401,7 +400,7 @@ describe('electron query integration', () => {
         1200000
       FROM companions;
       `
-    ]);
+    );
 
     const service = createService(dbPath);
 
@@ -436,7 +435,7 @@ describe('electron query integration', () => {
     const dbPath = path.join(tempDir, 'fixture-feed-gps.sqlite3');
     createFixtureDb(dbPath);
 
-    execFileSync('sqlite3', [
+    runSql(
       dbPath,
       `
       INSERT INTO usrself_feed_online_offline (created_at, user_id, display_name, type, location, world_name, time, group_name) VALUES
@@ -447,7 +446,7 @@ describe('electron query integration', () => {
         ('2026-04-12T11:00:00.000Z', 'usr_friend_a', 'Friend A', 'wrld_next:a~hidden(usr_host)~region(jp)', 'Next World', 'wrld_feed:alpha~hidden(usr_host)~region(jp)', 3600000, ''),
         ('2026-04-12T11:10:00.000Z', 'usr_friend_b', 'Friend B', 'wrld_next:b~hidden(usr_host)~region(jp)', 'Next World', 'wrld_feed:alpha~hidden(usr_host)~region(jp)', 3600000, '');
       `
-    ]);
+    );
 
     const service = createService(dbPath);
 
@@ -486,7 +485,7 @@ describe('electron query integration', () => {
     const dbPath = path.join(tempDir, 'fixture-relationship-top-merged.sqlite3');
     createFixtureDb(dbPath);
 
-    execFileSync('sqlite3', [
+    runSql(
       dbPath,
       `
       INSERT INTO usrself_feed_online_offline (created_at, user_id, display_name, type, location, world_name, time, group_name) VALUES
@@ -497,7 +496,7 @@ describe('electron query integration', () => {
         ('2026-04-12T11:00:00.000Z', 'usr_friend_a', 'Friend A', 'wrld_next:a~hidden(usr_host)~region(jp)', 'Next World', 'wrld_feed:alpha~hidden(usr_host)~region(jp)', 3600000, ''),
         ('2026-04-12T11:10:00.000Z', 'usr_friend_b', 'Friend B', 'wrld_next:b~hidden(usr_host)~region(jp)', 'Next World', 'wrld_feed:alpha~hidden(usr_host)~region(jp)', 3600000, '');
       `
-    ]);
+    );
 
     const service = createService(dbPath);
 
@@ -534,7 +533,7 @@ describe('electron query integration', () => {
     const dbPath = path.join(tempDir, 'fixture-feed-cap.sqlite3');
     createFixtureDb(dbPath);
 
-    execFileSync('sqlite3', [
+    runSql(
       dbPath,
       `
       INSERT INTO usrself_feed_online_offline (created_at, user_id, display_name, type, location, world_name, time, group_name) VALUES
@@ -542,7 +541,7 @@ describe('electron query integration', () => {
         ('2026-04-13T10:30:00.000Z', 'usr_friend_b', 'Friend B', 'Online', 'wrld_cap:room~hidden(usr_host)~region(jp)', 'Cap World', '', ''),
         ('2026-04-13T11:00:00.000Z', 'usr_stranger', 'Stranger', 'Online', 'wrld_elsewhere:1~hidden(usr_host)~region(jp)', 'Elsewhere', '', '');
       `
-    ]);
+    );
 
     const service = createService(dbPath);
 
@@ -562,7 +561,7 @@ describe('electron query integration', () => {
     const dbPath = path.join(tempDir, 'fixture-private.sqlite3');
     createFixtureDb(dbPath);
 
-    execFileSync('sqlite3', [
+    runSql(
       dbPath,
       `
       INSERT INTO gamelog_location (created_at, location, world_id, world_name, time, group_name) VALUES
@@ -573,7 +572,7 @@ describe('electron query integration', () => {
         ('2026-04-14T10:30:00.000Z', 'OnPlayerLeft', 'Friend A', 'wrld_private:42~private(usr_host)', 'usr_friend_a', 1800000),
         ('2026-04-14T10:30:00.000Z', 'OnPlayerLeft', 'Friend B', 'wrld_private:42~private(usr_host)', 'usr_friend_b', 1800000);
       `
-    ]);
+    );
 
     const service = createService(dbPath);
 
@@ -612,7 +611,7 @@ describe('electron query integration', () => {
     const dbPath = path.join(tempDir, 'fixture-literal-private.sqlite3');
     createFixtureDb(dbPath);
 
-    execFileSync('sqlite3', [
+    runSql(
       dbPath,
       `
       INSERT INTO usrself_feed_online_offline (created_at, user_id, display_name, type, location, world_name, time, group_name) VALUES
@@ -620,7 +619,7 @@ describe('electron query integration', () => {
         ('2026-04-15T10:10:00.000Z', 'usr_friend_b', 'Friend B', 'Online', 'private', 'private', '', ''),
         ('2026-04-15T11:00:00.000Z', 'usr_stranger', 'Stranger', 'Online', 'wrld_elsewhere:1~hidden(usr_host)', 'Elsewhere', '', '');
       `
-    ]);
+    );
 
     const service = createService(dbPath);
 
