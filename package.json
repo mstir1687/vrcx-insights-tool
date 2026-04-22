@@ -1,0 +1,21 @@
+{
+  "name": "vrcx-insights-tool",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "electron src/electron/main.js",
+    "dev": "electron src/electron/main.js",
+    "test": "vitest run",
+    "test:unit": "vitest run test/unit",
+    "test:integration": "vitest run test/integration"
+  },
+  "dependencies": {
+    "element-plus": "^2.13.7",
+    "vue": "^3.5.32"
+  },
+  "devDependencies": {
+    "electron": "^35.2.0",
+    "vitest": "^2.1.8"
+  }
+}
