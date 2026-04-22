@@ -218,6 +218,8 @@ __marimo__/
 # local
 .worktrees/
 cache/
+docs/superpowers/specs/
+docs/superpowers/plans/
 data/
 !data/nonebot_plugin_peek/
 config/
